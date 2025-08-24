@@ -1,547 +1,85 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Bubble Shooter – Single File</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Apps Launcher</title>
   <style>
-    :root{
-      --bg: #0f1226;
-      --panel: #161a35;
-      --text: #e6e8ff;
-      --muted: #a6abd8;
-      --accent: #7c9fff;
-      --danger: #ff6b6b;
-      --success:#5dd39e;
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      margin: 0;
+      padding: 24px;
+      background: #f4f4f9;
     }
-    *{box-sizing:border-box}
-    html,body{height:100%}
-    body{
-      margin:0; background:radial-gradient(circle at 50% -10%, #1b1f46, var(--bg));
-      color:var(--text); font-family:system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
-      display:grid; place-items:center; user-select:none;
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
     }
-    .wrap{width:100%; max-width:920px; padding:12px}
-    header{display:flex; gap:12px; align-items:center; justify-content:space-between; margin-bottom:10px}
-    .title{display:flex; align-items:center; gap:10px}
-    .title h1{font-size:20px; margin:0}
-    .title .badge{font-size:12px; color:var(--bg); background:linear-gradient(135deg, var(--accent), #b38bff); padding:4px 8px; border-radius:999px; font-weight:700}
-
-    .panel{
-      background:linear-gradient(180deg, rgba(255,255,255,0.03), rgba(0,0,0,0.08));
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius:18px; padding:12px 14px; display:flex; gap:12px; align-items:center;
-      box-shadow:0 8px 24px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.05);
+    .app-list {
+      max-width: 400px;
+      margin: auto;
     }
-    .panel .stat{display:flex; flex-direction:column; min-width:80px}
-    .panel .stat .label{font-size:12px; color:var(--muted)}
-    .panel .stat .value{font-size:18px; font-weight:800}
-    .panel .spacer{flex:1}
-    button, .btn{
-      background:linear-gradient(180deg, #2a3066, #1f244f);
-      border:1px solid rgba(255,255,255,0.08);
-      color:var(--text);
-      padding:8px 12px; border-radius:12px; cursor:pointer; font-weight:700; letter-spacing:.2px;
-      box-shadow:0 4px 12px rgba(0,0,0,.25), inset 0 1px 0 rgba(255,255,255,.06);
+    .app-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: white;
+      padding: 12px 16px;
+      margin-bottom: 12px;
+      border-radius: 12px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
     }
-    button:hover{filter:brightness(1.1)}
-    button:active{transform:translateY(1px)}
-
-    .game{position:relative; margin-top:12px; background:linear-gradient(180deg, #0a0d20, #0b0e22 60%, #0a0d20);
-      border:1px solid rgba(255,255,255,0.08); border-radius:18px; padding:10px; box-shadow:0 10px 28px rgba(0,0,0,.35)}
-    canvas{display:block; background:transparent; border-radius:12px}
-
-    .overlay{position:absolute; inset:10px; border-radius:12px; display:flex; align-items:center; justify-content:center; pointer-events:none}
-    .card{pointer-events:auto; text-align:center; background:rgba(10,12,30,.9); border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px 20px; width:min(520px, 92%); box-shadow:0 10px 30px rgba(0,0,0,.5)}
-    .card h2{margin:0 0 8px 0}
-    .card p{margin:8px 0; color:var(--muted)}
-    .row{display:flex; gap:10px; flex-wrap:wrap; justify-content:center; margin-top:12px}
-
-    .legend{display:flex; gap:8px; align-items:center; font-size:12px; color:var(--muted)}
-    .dot{width:14px; height:14px; border-radius:50%; display:inline-block; border:2px solid rgba(255,255,255,.25)}
-
-    .footer{margin-top:10px; font-size:12px; color:var(--muted); text-align:center}
-    .link{color:var(--accent); text-decoration:none}
+    .app-name {
+      font-size: 18px;
+    }
+    button {
+      padding: 8px 14px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      font-size: 14px;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #0056b3;
+    }
   </style>
 </head>
 <body>
-  <div class="wrap">
-    <header>
-      <div class="title">
-        <span class="badge">Single‑File</span>
-        <h1>Bubble Shooter</h1>
-      </div>
-      <div class="panel" id="hud">
-        <div class="stat"><span class="label">Score</span><span class="value" id="score">0</span></div>
-        <div class="stat"><span class="label">Level</span><span class="value" id="level">1</span></div>
-        <div class="stat"><span class="label">Shots</span><span class="value" id="shots">0</span></div>
-        <div class="spacer"></div>
-        <button id="btnNew">New Game</button>
-        <button id="btnPause">Pause</button>
-        <button id="btnMute">Sound: On</button>
-      </div>
-    </header>
-
-    <div class="game" id="game">
-      <canvas id="c" width="720" height="960" aria-label="Bubble Shooter playfield"></canvas>
-      <div class="overlay" id="overlay" hidden>
-        <div class="card">
-          <h2 id="ovTitle">Paused</h2>
-          <p id="ovMsg">Press Resume to continue.</p>
-          <div class="legend" style="justify-content:center;margin-top:6px">
-            <span class="dot" style="background:#ff6b6b"></span>
-            <span class="dot" style="background:#ffd166"></span>
-            <span class="dot" style="background:#4dabf7"></span>
-            <span class="dot" style="background:#845ef7"></span>
-            <span class="dot" style="background:#51cf66"></span>
-          </div>
-          <div class="row">
-            <button id="btnResume">Resume</button>
-            <button id="btnRestart">Restart</button>
-          </div>
-        </div>
-      </div>
+  <h1>My Apps</h1>
+  <div class="app-list">
+    <div class="app-item">
+      <span class="app-name">WhatsApp</span>
+      <button onclick="openApp('whatsapp://')">Open</button>
     </div>
-
-    <div class="footer">
-      Use mouse or touch to aim. Click/Tap to shoot. Match <strong>3+</strong> to pop. Bubbles slowly descend—don't let them reach the bottom.
+    <div class="app-item">
+      <span class="app-name">Cred</span>
+      <button onclick="openApp('cred://')">Open</button>
+    </div>
+    <div class="app-item">
+      <span class="app-name">Google Pay</span>
+      <button onclick="openApp('tez://')">Open</button>
+    </div>
+    <div class="app-item">
+      <span class="app-name">Gmail</span>
+      <button onclick="openApp('mailto:')">Open</button>
+    </div>
+    <div class="app-item">
+      <span class="app-name">Uber</span>
+      <button onclick="openApp('uber://')">Open</button>
+    </div>
+    <div class="app-item">
+      <span class="app-name">Rapido</span>
+      <button onclick="openApp('rapido://')">Open</button>
     </div>
   </div>
 
   <script>
-  // --- Bubble Shooter: single-file, no libs ---
-  ;(() => {
-    const canvas = document.getElementById('c');
-    const ctx = canvas.getContext('2d');
-    const W = canvas.width, H = canvas.height;
-
-    // Grid config (hex-like offset grid)
-    const BUBBLE_R = 18;                 // bubble radius
-    const COL_W = BUBBLE_R * 2;          // column width
-    const ROW_H = Math.sqrt(3) * BUBBLE_R * 0.98; // vertical spacing
-    const COLS = Math.floor((W - BUBBLE_R) / COL_W); // columns in even rows
-
-    const COLORS = [
-      '#ff6b6b', '#ffd166', '#4dabf7', '#845ef7', '#51cf66', '#ffa8a8', '#f8c4ff'
-    ];
-
-    // Game state
-    let grid = [];       // array of rows; each row is array of bubbles or null
-    let oddOffset = false; // whether first row is offset
-    let score = 0, level = 1, shots = 0, running = true, gameOver = false;
-    let nextColor = null;
-    let descentTimer = 0;      // accumulates time until next descent
-    const DESCENT_EVERY = 9000; // ms between descents (speeds up with level)
-
-    // Cannon / shooter
-    const cannon = { x: W/2, y: H - 60, angle: -Math.PI/2 };
-    let projectile = null; // {x,y, vx,vy, color}
-
-    // Input
-    let aimX = cannon.x, aimY = cannon.y - 100;
-    let paused = false;
-
-    // Audio (beeps via WebAudio)
-    const audio = {
-      ctx: null, muted: false,
-      init(){ if(!this.ctx) this.ctx = new (window.AudioContext||window.webkitAudioContext)(); },
-      beep(freq=660, dur=0.06, type='sine', gain=0.02){
-        if(this.muted) return;
-        try{
-          this.init();
-          const t = this.ctx.currentTime;
-          const o = this.ctx.createOscillator();
-          const g = this.ctx.createGain();
-          o.type = type; o.frequency.value = freq; g.gain.setValueAtTime(gain, t);
-          o.connect(g).connect(this.ctx.destination); o.start(t); o.stop(t+dur);
-        }catch(e){}
-      }
-    };
-
-    // --- Utilities ---
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const rand = arr => arr[Math.floor(Math.random()*arr.length)];
-
-    function rowCols(rowIdx){
-      const offset = (oddOffset ? 1 : 0) ^ (rowIdx & 1); // xor to alternate
-      const cols = COLS - (offset ? 1 : 0);
-      return { offset, cols };
+    function openApp(url) {
+      window.location.href = url;
     }
-    function gridToXY(col, row){
-      const { offset } = rowCols(row);
-      const x = BUBBLE_R + col*COL_W + (offset? BUBBLE_R : 0);
-      const y = BUBBLE_R + row*ROW_H;
-      return {x, y};
-    }
-    function xyToGrid(x, y){
-      // approximate – then search nearest valid slot
-      let row = Math.round((y - BUBBLE_R)/ROW_H);
-      row = Math.max(0, row);
-      const { offset, cols } = rowCols(row);
-      let col = Math.round((x - BUBBLE_R - (offset? BUBBLE_R:0))/COL_W);
-      col = clamp(col, 0, cols-1);
-
-      // pick closest among current row and neighbors
-      let best = {col, row};
-      let bestDist = 1e9;
-      for(let dr = -1; dr<=1; dr++){
-        const r = clamp(row+dr, 0, grid.length);
-        const rc = rowCols(r);
-        for(let dc = -1; dc<=1; dc++){
-          const c = clamp(col+dc, 0, rc.cols-1);
-          const p = gridToXY(c, r);
-          const d = Math.hypot(x-p.x, y-p.y);
-          if(d<bestDist){ bestDist=d; best={col:c,row:r}; }
-        }
-      }
-      return best;
-    }
-
-    function createProjectile(){
-      const color = nextColor ?? rand(activeColors());
-      nextColor = rand(activeColors());
-      const ang = cannon.angle;
-      const speed = 780/1000; // px per ms
-      projectile = {
-        x: cannon.x, y: cannon.y,
-        vx: Math.cos(ang)*speed, vy: Math.sin(ang)*speed,
-        color
-      };
-      shots++; updateHUD();
-      audio.beep(740, .05, 'triangle', .03);
-    }
-
-    function activeColors(){
-      // colors present in grid (fallback to all)
-      const set = new Set();
-      for(const row of grid){ if(!row) continue; for(const b of row){ if(b) set.add(b.color); } }
-      return set.size? [...set] : COLORS;
-    }
-
-    function seedRows(n=6){
-      grid = [];
-      for(let r=0;r<n;r++){
-        const {cols} = rowCols(r);
-        const row = new Array(cols).fill(null).map(()=>({color: rand(COLORS)}));
-        grid.push(row);
-      }
-    }
-
-    function addRow(){
-      // push existing rows down
-      const topRow = [];
-      const { cols } = rowCols(0);
-      for(let i=0;i<cols;i++) topRow.push({color: rand(activeColors())});
-      grid.unshift(topRow);
-      // if too many rows visually, end game if any bubble below threshold
-      const bottomY = gridToXY(0, grid.length-1).y + BUBBLE_R;
-      if(bottomY >= H - 100) { endGame(); }
-    }
-
-    function shootIfReady(){ if(!projectile && !paused && running) createProjectile(); }
-
-    function update(dt){
-      if(paused || !running) return;
-      descentTimer += dt;
-      const interval = Math.max(3500, DESCENT_EVERY - (level-1)*700);
-      if(descentTimer >= interval){ descentTimer = 0; addRow(); }
-
-      // Move projectile
-      if(projectile){
-        projectile.x += projectile.vx*dt;
-        projectile.y += projectile.vy*dt;
-        // wall bounces
-        if(projectile.x <= BUBBLE_R){ projectile.x = BUBBLE_R; projectile.vx *= -1; audio.beep(300,.03,'square',.01); }
-        if(projectile.x >= W-BUBBLE_R){ projectile.x = W-BUBBLE_R; projectile.vx *= -1; audio.beep(300,.03,'square',.01); }
-        if(projectile.y <= BUBBLE_R){ projectile.y = BUBBLE_R; settleProjectile(); return; }
-        // collision against grid
-        const hit = checkCollision(projectile);
-        if(hit){ settleProjectile(hit.near); }
-        // bottom fail-safe
-        if(projectile.y > H - 20){ settleProjectile(); }
-      }
-    }
-
-    function checkCollision(p){
-      for(let r=0;r<grid.length;r++){
-        const row = grid[r]; if(!row) continue;
-        for(let c=0;c<row.length;c++){
-          const b = row[c]; if(!b) continue;
-          const pos = gridToXY(c,r);
-          const d = Math.hypot(p.x-pos.x, p.y-pos.y);
-          if(d <= BUBBLE_R*2 - 0.5){
-            // return nearest empty slot around this bubble along the trajectory
-            return {near: xyToGrid(p.x, p.y)};
-          }
-        }
-      }
-      // also check ceiling
-      if(p.y <= BUBBLE_R + 1) return {near: xyToGrid(p.x, BUBBLE_R)};
-      return null;
-    }
-
-    function settleProjectile(target){
-      // Find snap cell
-      let cell = target || xyToGrid(projectile.x, projectile.y);
-      // ensure grid has enough rows
-      while(grid.length <= cell.row){ grid.push(new Array(rowCols(grid.length).cols).fill(null)); }
-      const { cols } = rowCols(cell.row);
-      cell.col = clamp(cell.col, 0, cols-1);
-
-      // If occupied, find closest empty neighbor (simple spiral)
-      if(grid[cell.row][cell.col]){
-        const dirs = [ [1,0],[-1,0],[0,1],[0,-1],[1,1],[-1,-1],[1,-1],[-1,1] ];
-        for(const [dx,dy] of dirs){
-          const r = cell.row+dy, c = cell.col+dx;
-          if(r>=0 && r<grid.length){
-            const rc = rowCols(r);
-            if(c>=0 && c<rc.cols && !grid[r][c]){ cell={row:r,col:c}; break; }
-          }
-        }
-      }
-
-      // Place bubble
-      const color = projectile.color;
-      grid[cell.row][cell.col] = { color };
-      projectile = null;
-
-      // Match & remove, then drop floaters
-      const popped = popMatches(cell.row, cell.col);
-      let dropCount = 0;
-      if(popped>0){
-        audio.beep(880,.07,'sawtooth',.03);
-        dropCount = dropFloaters();
-      }
-      score += popped*10 + dropCount*15;
-      if(popped>=3) level = 1 + Math.floor(score/250);
-      updateHUD();
-    }
-
-    function neighbors(r,c){
-      const list = [];
-      const { offset } = rowCols(r);
-      const up = r-1, down = r+1;
-      const left = c-1, right = c+1;
-      // same row
-      if(c-1>=0) list.push([r,c-1]);
-      if(c+1<rowCols(r).cols) list.push([r,c+1]);
-      // diagonals depend on offset
-      const ul = c - (offset?0:1);
-      const ur = c + (offset?1:0);
-      const dl = c - (offset?0:1);
-      const dr = c + (offset?1:0);
-      if(up>=0){ if(ul>=0 && ul<rowCols(up).cols) list.push([up,ul]); if(ur>=0 && ur<rowCols(up).cols) list.push([up,ur]); }
-      if(down<grid.length){ if(dl>=0 && dl<rowCols(down).cols) list.push([down,dl]); if(dr>=0 && dr<rowCols(down).cols) list.push([down,dr]); }
-      return list;
-    }
-
-    function popMatches(r,c){
-      const target = grid[r][c]; if(!target) return 0;
-      const seen = new Set(); const stack = [[r,c]]; const group=[];
-      while(stack.length){
-        const [rr,cc] = stack.pop();
-        const key = rr+":"+cc; if(seen.has(key)) continue; seen.add(key);
-        const b = grid[rr][cc]; if(!b || b.color!==target.color) continue;
-        group.push([rr,cc]);
-        for(const nb of neighbors(rr,cc)) stack.push(nb);
-      }
-      if(group.length>=3){
-        for(const [rr,cc] of group) grid[rr][cc]=null;
-        return group.length;
-      }
-      return 0;
-    }
-
-    function dropFloaters(){
-      // mark bubbles connected to ceiling; others drop
-      const visited = new Set();
-      const stack = [];
-      // push top row bubbles
-      if(grid.length){
-        for(let c=0;c<grid[0].length;c++) if(grid[0][c]) stack.push([0,c]);
-      }
-      while(stack.length){
-        const [r,c] = stack.pop();
-        const key=r+":"+c; if(visited.has(key)) continue; visited.add(key);
-        for(const [rr,cc] of neighbors(r,c)){
-          if(grid[rr] && grid[rr][cc]) stack.push([rr,cc]);
-        }
-      }
-      let dropped = 0;
-      for(let r=0;r<grid.length;r++){
-        const cols = rowCols(r).cols;
-        for(let c=0;c<cols;c++){
-          if(grid[r][c] && !visited.has(r+":"+c)){
-            grid[r][c]=null; dropped++;
-          }
-        }
-      }
-      if(dropped>0) audio.beep(520,.07,'triangle',.025);
-      trimEmptyBottom();
-      return dropped;
-    }
-
-    function trimEmptyBottom(){
-      // remove trailing empty rows at bottom to keep grid compact
-      for(let r=grid.length-1;r>=0;r--){
-        if(grid[r].some(b=>b)) break; else grid.pop();
-      }
-    }
-
-    function endGame(){
-      running=false; gameOver=true; paused=false; showOverlay("Game Over", `Final Score: ${score}`);
-      audio.beep(140,.25,'sine',.04);
-    }
-
-    function newGame(){
-      score=0; level=1; shots=0; running=true; paused=false; gameOver=false; descentTimer=0;
-      seedRows(6); nextColor = rand(COLORS); projectile=null; updateHUD(); hideOverlay();
-    }
-
-    // --- Rendering ---
-    function drawBubble(x,y,color){
-      // glossy circle
-      const r = BUBBLE_R;
-      const grd = ctx.createRadialGradient(x-r*0.4, y-r*0.6, r*0.2, x, y, r);
-      grd.addColorStop(0, 'rgba(255,255,255,0.9)');
-      grd.addColorStop(0.2, color);
-      grd.addColorStop(1, shade(color, -25));
-      ctx.fillStyle = grd;
-      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill();
-      // ring
-      ctx.strokeStyle = 'rgba(0,0,0,0.25)'; ctx.lineWidth=2; ctx.stroke();
-    }
-
-    function shade(hex, pct){
-      // hex like #rrggbb, pct -100..100
-      const n = parseInt(hex.slice(1),16);
-      let r=(n>>16)&255, g=(n>>8)&255, b=n&255;
-      r = Math.round(clamp(r + 2.55*pct, 0, 255));
-      g = Math.round(clamp(g + 2.55*pct, 0, 255));
-      b = Math.round(clamp(b + 2.55*pct, 0, 255));
-      return '#' + ((1<<24) + (r<<16) + (g<<8) + b).toString(16).slice(1);
-    }
-
-    function render(){
-      ctx.clearRect(0,0,W,H);
-
-      // playfield boundaries
-      ctx.save();
-      ctx.strokeStyle='rgba(255,255,255,0.08)'; ctx.lineWidth=2; 
-      ctx.strokeRect(4,4,W-8,H-8);
-      ctx.restore();
-
-      // grid
-      for(let r=0;r<grid.length;r++){
-        const row = grid[r];
-        for(let c=0;c<row.length;c++){
-          const b = row[c]; if(!b) continue;
-          const p = gridToXY(c,r);
-          drawBubble(p.x, p.y, b.color);
-        }
-      }
-
-      // cannon base
-      ctx.save();
-      ctx.translate(cannon.x, cannon.y);
-      ctx.fillStyle='rgba(255,255,255,0.06)';
-      ctx.beginPath(); ctx.arc(0,0,28,0,Math.PI*2); ctx.fill();
-      // barrel
-      ctx.rotate(cannon.angle);
-      ctx.fillStyle='rgba(255,255,255,0.25)';
-      ctx.fillRect(-7,-7,44,14);
-      ctx.restore();
-
-      // next bubble preview
-      ctx.save();
-      drawBubble(70, H-48, nextColor||'#fff');
-      ctx.fillStyle='rgba(255,255,255,0.6)';
-      ctx.font='12px system-ui'; ctx.fillText('Next', 36, H-18);
-      ctx.restore();
-
-      // projectile
-      if(projectile){ drawBubble(projectile.x, projectile.y, projectile.color); }
-
-      // danger line
-      const dangerY = H - 100;
-      ctx.save();
-      ctx.strokeStyle='rgba(255,107,107,0.35)'; ctx.setLineDash([8,8]);
-      ctx.beginPath(); ctx.moveTo(10, dangerY); ctx.lineTo(W-10, dangerY); ctx.stroke();
-      ctx.restore();
-    }
-
-    // --- HUD & Overlay ---
-    function updateHUD(){
-      document.getElementById('score').textContent = score;
-      document.getElementById('level').textContent = level;
-      document.getElementById('shots').textContent = shots;
-    }
-    function showOverlay(title, msg){
-      document.getElementById('ovTitle').textContent=title;
-      document.getElementById('ovMsg').textContent=msg;
-      document.getElementById('overlay').hidden=false;
-    }
-    function hideOverlay(){ document.getElementById('overlay').hidden=true; }
-
-    // --- Input handling ---
-    function setAimFromPointer(x,y){
-      const rect = canvas.getBoundingClientRect();
-      const px = (x - rect.left) * (canvas.width / rect.width);
-      const py = (y - rect.top) * (canvas.height / rect.height);
-      aimX = px; aimY = py;
-      const dx = aimX - cannon.x, dy = aimY - cannon.y;
-      cannon.angle = Math.atan2(dy, dx);
-      // limit angle to upper hemisphere
-      cannon.angle = clamp(cannon.angle, -Math.PI + 0.2, -0.2);
-    }
-
-    canvas.addEventListener('mousemove', e=> setAimFromPointer(e.clientX, e.clientY));
-    canvas.addEventListener('mousedown', e=> { if(!paused && running) shootIfReady(); });
-
-    // touch support
-    canvas.addEventListener('touchmove', e=>{ const t=e.touches[0]; setAimFromPointer(t.clientX,t.clientY); }, {passive:true});
-    canvas.addEventListener('touchstart', e=>{ const t=e.touches[0]; setAimFromPointer(t.clientX,t.clientY); shootIfReady(); }, {passive:true});
-
-    // keyboard
-    window.addEventListener('keydown', e=>{
-      if(e.code==='Space'){ e.preventDefault(); shootIfReady(); }
-      if(e.code==='KeyP'){ togglePause(); }
-      if(e.code==='KeyM'){ toggleMute(); }
-      if(e.code==='KeyN'){ newGame(); }
-      if(e.code==='ArrowLeft' || e.code==='ArrowRight'){
-        const d = e.code==='ArrowLeft' ? -0.08 : 0.08;
-        cannon.angle = clamp(cannon.angle + d, -Math.PI + 0.2, -0.2);
-      }
-    });
-
-    // buttons
-    document.getElementById('btnNew').onclick = () => newGame();
-    document.getElementById('btnPause').onclick = () => togglePause();
-    document.getElementById('btnResume').onclick = () => togglePause(false);
-    document.getElementById('btnRestart').onclick = () => { hideOverlay(); newGame(); };
-    document.getElementById('btnMute').onclick = () => toggleMute();
-
-    function togglePause(force){
-      if(gameOver) return;
-      paused = (typeof force==='boolean') ? force : !paused;
-      if(paused){ showOverlay('Paused', 'Press Resume to continue.'); }
-      else { hideOverlay(); }
-    }
-    function toggleMute(){ audio.muted = !audio.muted; document.getElementById('btnMute').textContent = 'Sound: ' + (audio.muted? 'Off':'On'); }
-
-    // --- Main loop ---
-    let last = performance.now();
-    function frame(now){
-      const dt = Math.min(32, now-last); last = now; // ms
-      update(dt);
-      render();
-      if(running || paused) requestAnimationFrame(frame);
-    }
-
-    // kick off
-    newGame();
-    requestAnimationFrame(frame);
-  })();
   </script>
 </body>
-</html>
+    </html>
