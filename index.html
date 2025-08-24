@@ -52,34 +52,44 @@
   <div class="app-list">
     <div class="app-item">
       <span class="app-name">WhatsApp</span>
-      <button onclick="openApp('whatsapp://')">Open</button>
+      <button onclick="openApp('whatsapp://send?text=Hello', 'https://play.google.com/store/apps/details?id=com.whatsapp')">Open</button>
     </div>
     <div class="app-item">
       <span class="app-name">Cred</span>
-      <button onclick="openApp('cred://')">Open</button>
+      <button onclick="openApp('cred://', 'https://play.google.com/store/apps/details?id=com.dreamplug.androidapp')">Open</button>
     </div>
     <div class="app-item">
       <span class="app-name">Google Pay</span>
-      <button onclick="openApp('tez://')">Open</button>
+      <button onclick="openApp('tez://upi/pay', 'https://play.google.com/store/apps/details?id=com.google.android.apps.nbu.paisa.user')">Open</button>
     </div>
     <div class="app-item">
       <span class="app-name">Gmail</span>
-      <button onclick="openApp('mailto:')">Open</button>
+      <button onclick="openApp('mailto:', 'https://mail.google.com')">Open</button>
     </div>
     <div class="app-item">
       <span class="app-name">Uber</span>
-      <button onclick="openApp('uber://')">Open</button>
+      <button onclick="openApp('uber://', 'https://play.google.com/store/apps/details?id=com.ubercab')">Open</button>
     </div>
     <div class="app-item">
       <span class="app-name">Rapido</span>
-      <button onclick="openApp('rapido://')">Open</button>
+      <button onclick="openApp('rapido://', 'https://play.google.com/store/apps/details?id=com.rapido.passenger')">Open</button>
     </div>
   </div>
 
   <script>
-    function openApp(url) {
-      window.location.href = url;
+    function openApp(appUrl, fallbackUrl) {
+      // Try opening app
+      let now = new Date().getTime();
+      window.location = appUrl;
+
+      // Fallback to Play Store/App Store if not installed
+      setTimeout(function () {
+        let later = new Date().getTime();
+        if (later - now < 2000) {
+          window.location = fallbackUrl;
+        }
+      }, 1500);
     }
   </script>
 </body>
-    </html>
+  </html>
